@@ -140,6 +140,27 @@ internal class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        using (var scope = app.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            // Make sure roles exist
+            if (!await roleManager.RoleExistsAsync("Admin"))
+                await roleManager.CreateAsync(new IdentityRole("Admin"));
+
+            // Find admin by email and add Admin role
+            var adminUser = await userManager.FindByEmailAsync("admin@gmail.com");
+            if (adminUser != null)
+            {
+                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+            }
+        }
+
+
         app.MapControllers();
 
         await app.RunAsync();
