@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AUTHApi.Controllers
 {
-    /// <summary>
+   
     /// Controller for managing roles
     /// Base URL: /api/Roles
     /// IMPORTANT: All endpoints require Admin role
-    /// </summary>
+   
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Policy = "AdminOnly")]  // Only Admins can access this controller
@@ -24,10 +24,10 @@ namespace AUTHApi.Controllers
             _userManager = userManager;
         }
 
-        /// <summary>
+       
         /// Get all roles in the system
         /// GET /api/Roles
-        /// </summary>
+   
         [HttpGet]
         public IActionResult GetAllRoles()
         {
@@ -35,11 +35,10 @@ namespace AUTHApi.Controllers
             return Ok(new { success = true, roles = roles });
         }
 
-        /// <summary>
+     
         /// Assign a role to a user
         /// POST /api/Roles/AssignRole
-        /// Body: { "email": "user@example.com", "roleName": "Admin" }
-        /// </summary>
+ 
         [HttpPost("AssignRole")]
         public async Task<IActionResult> AssignRoleToUser([FromBody] AssignRoleModel model)
         {
@@ -79,12 +78,9 @@ namespace AUTHApi.Controllers
 
             return BadRequest(new { success = false, message = "Failed to assign role", errors = result.Errors });
         }
-
-        /// <summary>
+         
         /// Remove a role from a user
-        /// POST /api/Roles/RemoveRole
-        /// Body: { "email": "user@example.com", "roleName": "Admin" }
-        /// </summary>
+    
         [HttpPost("RemoveRole")]
         public async Task<IActionResult> RemoveRoleFromUser([FromBody] AssignRoleModel model)
         {
@@ -117,11 +113,10 @@ namespace AUTHApi.Controllers
 
             return BadRequest(new { success = false, message = "Failed to remove role", errors = result.Errors });
         }
-
-        /// <summary>
+ 
         /// Get all roles for a specific user
         /// GET /api/Roles/UserRoles/{email}
-        /// </summary>
+       
         [HttpGet("UserRoles/{email}")]
         public async Task<IActionResult> GetUserRoles(string email)
         {
@@ -135,10 +130,9 @@ namespace AUTHApi.Controllers
             return Ok(new { success = true, email = email, roles = roles });
         }
     }
-
-    /// <summary>
+ 
     /// Model for assigning/removing roles
-    /// </summary>
+  
     public class AssignRoleModel
     {
         public string Email { get; set; } = string.Empty;

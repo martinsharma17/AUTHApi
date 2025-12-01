@@ -9,10 +9,10 @@ using System.Security.Claims;
 
 namespace AUTHApi.Controllers
 {
-    /// <summary>
+
     /// Controller for user authentication (Register, Login, Logout)
     /// Base URL: /api/UserAuth
-    /// </summary>
+
     [Route("api/[controller]")]
     [ApiController]
     public class UserAuthController : ControllerBase
@@ -41,12 +41,9 @@ namespace AUTHApi.Controllers
             _JwtExpiry = int.Parse(configuration["Jwt:ExpireMinutes"] ?? "60");
         }
 
-        /// <summary>
+
         /// Register a new user
         /// POST /api/UserAuth/Register
-        /// </summary>
-        /// <param name="registerModel">User registration data (Name, Email, Password)</param>
-        /// <returns>Success message</returns>
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
         {
@@ -89,12 +86,9 @@ namespace AUTHApi.Controllers
             }
         }
 
-        /// <summary>
         /// Login user and get JWT token
         /// POST /api/UserAuth/Login
-        /// </summary>
-        /// <param name="loginModel">Login credentials (Email, Password)</param>
-        /// <returns>JWT token and user roles</returns>
+
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
@@ -119,10 +113,9 @@ namespace AUTHApi.Controllers
             return Ok(new { success = true, token = token, roles = roles });
         }
 
-        /// <summary>
         /// Logout user
         /// POST /api/UserAuth/Logout
-        /// </summary>
+
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
@@ -130,24 +123,21 @@ namespace AUTHApi.Controllers
             return Ok(new { success = true, message = "User logged out successfully" });
         }
 
-        /// <summary>
         /// Generate JWT token for authenticated user
         /// This token includes user roles and claims for authorization
-        /// </summary>
-        /// <param name="user">The user to generate token for</param>
-        /// <returns>JWT token string</returns>
+
         private async Task<string> GenerateJWTToken(ApplicationUser user)
         {
             // Step 1: Get user roles (e.g., "Admin", "User")
             // These roles will be included in the token and used for [Authorize(Roles = "Admin")]
             var roles = await _userManager.GetRolesAsync(user);
-            
+
             // Step 2: Get user claims (custom permissions)
             var userClaims = await _userManager.GetClaimsAsync(user);
-            
+
             // Step 3: Build base claims (user information)
             var claims = new List<Claim>
-            { 
+            {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),  // Subject (user ID)
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),  // Email
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),  // Unique token ID
@@ -182,13 +172,13 @@ namespace AUTHApi.Controllers
                 expires: DateTime.Now.AddMinutes(_JwtExpiry),  // Token expiration
                 signingCredentials: creds  // Signing key
             );
-            
+
             // Step 8: Return token as string
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 
 
-    
+
 
 }

@@ -4,19 +4,19 @@ using System.Security.Claims;
 
 namespace AUTHApi.Controllers
 {
-    /// <summary>
+    
     /// Example controller demonstrating Role-Based and Policy-Based Authorization
     /// Base URL: /api/Example
-    /// </summary>
+ 
     [Route("api/[controller]")]
     [ApiController]
     public class ExampleController : ControllerBase
     {
-        /// <summary>
+  
         /// EXAMPLE 1: No authorization required (public endpoint)
         /// GET /api/Example/Public
         /// Anyone can access this endpoint
-        /// </summary>
+      
         [HttpGet("Public")]
         public IActionResult PublicEndpoint()
         {
@@ -26,11 +26,10 @@ namespace AUTHApi.Controllers
             });
         }
 
-        /// <summary>
+        
         /// EXAMPLE 2: Requires authentication only
         /// GET /api/Example/Authenticated
-        /// Any logged-in user can access (Admin or User)
-        /// </summary>
+    
         [HttpGet("Authenticated")]
         [Authorize]  // Requires authentication, but any role is OK
         public IActionResult AuthenticatedEndpoint()
@@ -42,11 +41,11 @@ namespace AUTHApi.Controllers
             });
         }
 
-        /// <summary>
+       
         /// EXAMPLE 3: Role-Based Authorization - Admin only
         /// GET /api/Example/AdminOnly
         /// Only users with "Admin" role can access
-        /// </summary>
+    
         [HttpGet("AdminOnly")]
         [Authorize(Roles = "Admin")]  // Only Admin role can access
         public IActionResult AdminOnlyEndpoint()
@@ -59,11 +58,11 @@ namespace AUTHApi.Controllers
             });
         }
 
-        /// <summary>
+         
         /// EXAMPLE 4: Role-Based Authorization - User only
         /// GET /api/Example/UserOnly
         /// Only users with "User" role can access
-        /// </summary>
+ 
         [HttpGet("UserOnly")]
         [Authorize(Roles = "User")]  // Only User role can access
         public IActionResult UserOnlyEndpoint()
