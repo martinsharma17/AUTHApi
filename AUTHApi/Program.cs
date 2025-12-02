@@ -197,6 +197,17 @@ internal class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddSwaggerGen();
 
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowSpecificOrigin",
+                builder =>
+                {
+                    builder.WithOrigins("http://localhost:5173") // Frontend URL
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+        });
+
         // ============================================
         // IDENTITY CONFIGURATION
         // ============================================
@@ -315,6 +326,7 @@ internal class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("AllowSpecificOrigin"); // Apply the CORS policy
 //in order 
         app.UseAuthentication();
         app.UseAuthorization();

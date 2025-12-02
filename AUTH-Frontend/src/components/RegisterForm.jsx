@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx'; // For auto-login after register
 
 const RegisterForm = () => {
+    const [name, setName] = useState(''); // New state for name
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,7 +25,8 @@ const RegisterForm = () => {
 
         // Validation: Comprehensive - empty, match, length, email format.
         const trimmedEmail = email.trim();
-        if (!trimmedEmail || !password || !confirmPassword) {
+        const trimmedName = name.trim(); // Trim name
+        if (!trimmedName || !trimmedEmail || !password || !confirmPassword) { // Add name to validation
             setError('All fields are required.');
             setLoading(false);
             return;
@@ -52,7 +54,7 @@ const RegisterForm = () => {
             const registerResponse = await fetch('http://localhost:3001/api/UserAuth/Register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: trimmedEmail, password }),
+                body: JSON.stringify({ name: trimmedName, email: trimmedEmail, password }), // Include name
             });
             const registerData = await registerResponse.json();
 
@@ -65,7 +67,7 @@ const RegisterForm = () => {
                     setError('Registration successful, but login failed. Please login manually.');
                 }
             } else {
-                setError(registerData.message || 'Registration failed. Email may exist.');
+                setError(registerData.message || 'Registration failed.'); // More generic message
             }
         } catch (err) {
             console.error('Register error:', err);
@@ -78,6 +80,18 @@ const RegisterForm = () => {
         <div className="form-container">
             <h2>Create New Account</h2>
             <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="name">Name</label> {/* New name input */}
+                    <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        required
+                        disabled={loading}
+                    />
+                </div>
                 <div className="form-group">
                     <label htmlFor="email">Email Address</label>
                     <input
