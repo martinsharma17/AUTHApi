@@ -5,6 +5,8 @@
 // Why Context? Avoids prop-drilling; any component can access auth state easily.
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { jwtDecode } from 'jwt-decode'; // Import jwtDecode
 
 // Create context: Holds auth values (token, user, methods).
 const AuthContext = createContext();
@@ -24,10 +26,19 @@ export const useAuth = () => {
 // State: token (JWT string), user (object from backend), loading (bool for initial check).
 export const AuthProvider = ({ children }) => {
     // Initialize from localStorage: Persists login across browser refreshes.
-    const [token, setToken] = useState(() => localStorage.getItem('authToken'));
+    const [token, setToken] = useState(() => {
+        const storedToken = localStorage.getItem('authToken');
+        console.log('Initial token from localStorage:', storedToken);
+        return storedToken;
+    });
     const [user, setUser] = useState(() => {
         const storedRoles = localStorage.getItem('userRoles');
-        return storedRoles ? { roles: JSON.parse(storedRoles) } : null;
+        if (storedRoles) {
+            console.log('Initial user roles from localStorage:', storedRoles);
+            return { roles: JSON.parse(storedRoles) };
+        } 
+        console.log('No initial user roles found.');
+        return null;
     }); // Backend user: { id, email, roles }
     const [loading, setLoading] = useState(true); // True on mount for splash prevention
 
@@ -35,6 +46,7 @@ export const AuthProvider = ({ children }) => {
     // Why useEffect? Side-effect free component; handles async validation.
     useEffect(() => {
         const initAuth = async () => {
+            console.log('Auth init effect running. Current token:', token);
             if (token) {
                 // Optional: Validate token with backend /api/me (uncomment if endpoint exists)
                 // try {
@@ -52,10 +64,12 @@ export const AuthProvider = ({ children }) => {
                 // }
             } else {
                 // If no token, clear user and roles from local storage
+                console.log('No token found on init, clearing local storage and user state.');
                 localStorage.removeItem('userRoles');
                 setUser(null);
             }
             setLoading(false); // Done loading
+            console.log('Auth init completed. Loading set to false.');
         };
         initAuth();
     }, [token]); // Re-run if token changes
@@ -66,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     // Handles: Network errors, invalid creds, sets token/user on success.
     const login = async (email, password) => {
         try {
+            console.log('Attempting login for:', email);
             // Fetch config: Matches your backend expectations (JSON body, no auth header for login).
             const response = await fetch('http://localhost:3001/api/UserAuth/Login', {
                 method: 'POST',
@@ -76,16 +91,27 @@ export const AuthProvider = ({ children }) => {
             });
 
             const data = await response.json(); // Parse JSON response
+            console.log('Login API response:', data);
 
             // Success check: Based on your backend { success: true }
             if (data.success) {
-                // Persist: Store token securely (localStorage; use httpOnly cookies in prod if needed).
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('userRoles', JSON.stringify(data.roles));
+
+                const decodedToken = jwtDecode(data.token);
+                console.log("Decoded Token in AuthContext (for ID and Name):", decodedToken); // Log the full decoded token
+                const userEmail = decodedToken.email;
+                // Correctly extract userId using the standard 'sub' claim or the .NET Identity 'nameidentifier' claim
+                const userId = decodedToken.sub || decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']; 
+                // Correctly extract userName using the .NET Identity 'name' claim
+                const userName = decodedToken['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || decodedToken.name || '';
+
                 setToken(data.token);
-                setUser({ roles: data.roles }); // Set user roles for display
+                setUser({ id: userId, email: userEmail, name: userName, roles: data.roles }); // Set full user object with name
+                console.log('Login successful. User state set:', { id: userId, email: userEmail, name: userName, roles: data.roles });
                 return { success: true }; // No message needed on success
             } else {
+                console.log('Login failed:', data.message);
                 return { success: false, message: data.message || 'Invalid credentials' }; // Backend error msg
             }
         } catch (error) {
@@ -98,6 +124,7 @@ export const AuthProvider = ({ children }) => {
     // Logout: Clears state/storage, no backend call (client-side).
     // Why? Token invalidation on backend optional; this suffices for most apps.
     const logout = () => {
+        console.log('Logging out.');
         localStorage.removeItem('authToken');
         localStorage.removeItem('userRoles');
         setToken(null);
@@ -115,9 +142,11 @@ export const AuthProvider = ({ children }) => {
 
     // Render: If loading, show nothing (or spinner); else provide context.
     if (loading) {
+        console.log('AuthContext is loading...');
         return <div>Loading...</div>; // Simple placeholder; customize with spinner
     }
 
+    console.log('AuthContext loaded. Token:', token, 'User:', user);
     return (
         <AuthContext.Provider value={value}>
             {children}

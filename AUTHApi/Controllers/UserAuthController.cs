@@ -141,7 +141,7 @@ namespace AUTHApi.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),  // Subject (user ID)
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),  // Email
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),  // Unique token ID
-                new Claim(ClaimTypes.Name, user.Name),  // User's name
+                new Claim(ClaimTypes.Name, user.Name ?? string.Empty),  // User's name
                 new Claim(ClaimTypes.NameIdentifier, user.Id)  // User ID
             };
 

@@ -2,6 +2,8 @@ using AUTHApi.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // Added this using directive
+using System.Security.Claims; // Added this using directive
 
 namespace AUTHApi.Controllers
 {
@@ -33,6 +35,70 @@ namespace AUTHApi.Controllers
         {
             var roles = _roleManager.Roles.Select(r => new { r.Id, r.Name }).ToList();
             return Ok(new { success = true, roles = roles });
+        }
+
+        /// Get all users (SuperAdmin only)
+        /// GET /api/Roles/AllUsers
+        [HttpGet("AllUsers")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userList = new List<object>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userList.Add(new { user.Id, user.Name, user.Email, Roles = roles });
+            }
+
+            return Ok(new { success = true, users = userList });
+        }
+
+        /// Get all admins (SuperAdmin only)
+        /// GET /api/Roles/AllAdmins
+        [HttpGet("AllAdmins")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> GetAllAdmins()
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            var adminList = new List<object>();
+
+            foreach (var admin in admins)
+            {
+                var roles = await _userManager.GetRolesAsync(admin);
+                adminList.Add(new { admin.Id, admin.Name, admin.Email, Roles = roles });
+            }
+
+            return Ok(new { success = true, admins = adminList });
+        }
+
+        /// Get users managed by the current Admin (Admin only)
+        /// GET /api/Admin/users
+        [HttpGet("Admin/users")] // Corrected path to match frontend
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetUsersForAdmin()
+        {
+            var adminId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Get Admin's ID from JWT
+
+            if (string.IsNullOrEmpty(adminId))
+            {
+                return Unauthorized(new { success = false, message = "Admin ID not found in token." });
+            }
+
+            // Assuming ApplicationUser has a ManagerId property to link users to their managing Admin
+            var users = await _userManager.Users
+                                        .Where(u => u.ManagerId == adminId)
+                                        .ToListAsync();
+
+            var userList = new List<object>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                userList.Add(new { user.Id, user.Name, user.Email, Roles = roles });
+            }
+
+            return Ok(new { success = true, users = userList });
         }
 
      
